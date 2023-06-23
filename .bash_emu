@@ -1,0 +1,279 @@
+#!/bin/bash
+
+function bash_cleanemu {
+
+	## Check if env vars exist, them if not
+	if [[ -z $PATH ]] ; then
+		export PATH=''
+	fi
+
+	if [[ -z $LD_LIBRARY_PATH ]] ; then
+		export LD_LIBRARY_PATH=''
+	fi
+
+	if [[ -z $INFOPATH ]] ; then
+		export INFOPATH=''
+	fi
+
+	if [[ -z $PKG_CONFIG_PATH ]] ; then
+		export PKG_CONFIG_PATH=''
+	fi
+
+	### Remove previous veloce software, gcc & systemc versions from the environement ###
+
+	## remove previous veloce locations from the $PATH & $LD_LIBRARY_PATH env variables
+	export PATH=`echo $PATH | sed -e 's/\/home\/cao\/emulateur\/veloce\/Veloce_v[0-9\.]*\/bin//g' | sed -e 's/::/:/g' | sed -e 's/^://g' | sed -e 's/:$//g'`
+	export LD_LIBRARY_PATH=`echo $LD_LIBRARY_PATH | sed -e 's/\/home\/cao\/emulateur\/veloce\/Veloce_v[0-9\.]*\/bin[a-zA-Z0-9\_\/]*//g' | sed -e 's/::/:/g' | sed -e 's/^://g' | sed -e 's/:$//g'`
+
+	## remove previous veloce systemc locations from the $PATH & $LD_LIBRARY_PATH env variables
+	export LD_LIBRARY_PATH=`echo $LD_LIBRARY_PATH | sed -e 's/\/home\/cao\/emulateur\/med_tools\/med_tools_v[0-9\.]*\/linux\/systemc\/lib\/linux64_el30_gnu[0-9]*//g' | sed -e 's/::/:/g' | sed -e 's/^://g' | sed -e 's/:$//g'`
+	export LD_LIBRARY_PATH=`echo $LD_LIBRARY_PATH | sed -e 's/\/home\/cao\/emulateur\/veloce\/Veloce_v[0-9\.]*\/bin\/med_tools\/linux\/systemc\/lib\/linux64_el30_gnu[0-9]*//g' | sed -e 's/::/:/g' | sed -e 's/^://g' | sed -e 's/:$//g'`
+	export LD_LIBRARY_PATH=`echo $LD_LIBRARY_PATH | sed -e 's/\/home\/cao\/emulateur\/veloce\/Veloce_v[0-9\.]*\/bin\/med_tools\/linux\/systemc\/include//g' | sed -e 's/::/:/g' | sed -e 's/^://g' | sed -e 's/:$//g'`
+	export LD_LIBRARY_PATH=`echo $LD_LIBRARY_PATH | sed -e 's/\/home\/cao\/emulateur\/med_tools\/med_tools_v[0-9\.]*\/linux\/systemc\/include//g' | sed -e 's/::/:/g' | sed -e 's/^://g' | sed -e 's/:$//g'`
+
+	## remove previous questasim gcc locations from the $PATH & $LD_LIBRARY_PATH env variables
+	export PATH=`echo $PATH | sed -e 's/\/home\/cao\/mgc\/questasim[0-9\._]*\/gcc-[0-9\.]*-linux[_x86_64]*\/[\/]*bin//g' | sed -e 's/::/:/g' | sed -e 's/^://g' | sed -e 's/:$//g'`
+	export LD_LIBRARY_PATH=`echo $LD_LIBRARY_PATH | sed -e 's/\/home\/cao\/mgc\/questasim[0-9\._]*\/gcc-[0-9\.]*-linux[_x86_64]*\/[\/]*lib[0-9]*//g' | sed -e 's/::/:/g' | sed -e 's/^://g' | sed -e 's/:$//g'`
+	
+	## remove previous questasim locations from the $PATH & $LD_LIBRARY_PATH env variables
+	#export PATH=`echo $PATH | sed -e 's/\/home\/cao\/mgc\/questasim[0-9a-zA-Z\._-\/]*://g' | sed -e 's/::/:/g' | sed -e 's/^://g' | sed -e 's/:$//g'`
+	#export LD_LIBRARY_PATH=`echo $LD_LIBRARY_PATH | sed -e 's/\/home\/cao\/mgc\/questasim[0-9a-zA-Z\._-\/]*://g' | sed -e 's/::/:/g' | sed -e 's/^://g' | sed -e 's/:$//g'`
+
+	## unset previous veloce env variables
+	unset VELOCE_HOME
+	unset VMW_RSH
+	unset MED_EMULATOR
+	unset MED_COMMON_LLSW_FILES
+	unset VMW_DISABLE_OS_CHECK
+
+	## unset preious questasim env variables
+	unset QUESTA_PATH
+	unset MTI
+	unset MTI_HOME
+	unset MGC_HOME
+	unset MTI_BYPASS_SC_PLATFORM_CHECK
+
+	## uniquify paths (inplace)
+	export PATH=`echo $PATH | awk -F ":" '{for (i=1; i<=NF ; i++) {print $i} }' | xargs -n1 | cat -n | sort -uk2 | sort -nk1 | cut -f2- | xargs | sed -e 's/ /:/g'`
+	export LD_LIBRARY_PATH=`echo $LD_LIBRARY_PATH | awk -F ":" '{for (i=1; i<=NF ; i++) {print $i} }' | xargs -n1 | cat -n | sort -uk2 | sort -nk1 | cut -f2- | xargs | sed -e 's/ /:/g'`
+	export MANPATH=`echo $MANPATH | awk -F ":" '{for (i=1; i<=NF ; i++) {print $i} }' | xargs -n1 | cat -n | sort -uk2 | sort -nk1 | cut -f2- | xargs | sed -e 's/ /:/g'`
+
+	## fix to allow for the default manpath
+	export MANPATH=`echo ":$MANPATH" | sed -e 's/^[:]*/:/g'`
+
+	## debug printout
+	#paths
+
+}
+
+function bash_emu {
+
+	### Check if env vars exist, them if not ###
+	if [[ -z $PATH ]] ; then
+		export PATH=''
+	fi
+
+	if [[ -z $LD_LIBRARY_PATH ]] ; then
+		export LD_LIBRARY_PATH=''
+	fi
+
+	if [[ -z $INFOPATH ]] ; then
+		export INFOPATH=''
+	fi
+
+	if [[ -z $PKG_CONFIG_PATH ]] ; then
+		export PKG_CONFIG_PATH=''
+	fi
+
+	### lisan env variables & sources ###
+
+	## Setup the setcad env
+	#source /home/mi412114/env_cao.sh
+
+	## Setup the nc envieonement
+
+	## nc path
+	ncpath="/home/cao/altair/rtda/prod/latest/common/etc"
+	#ncpath="/home/cao/altair/rtda/emul/latest/common/etc"
+
+	## nc bash source 	
+	if [[ -f $ncpath/vovrc.sh ]] ; then
+		source $ncpath/vovrc.sh
+	fi
+
+	## lisan licmanager sources
+	export PATH="/home/cao/caoutil/licmanager/bin:${PATH}"
+
+	## LISAN tools aio script
+	#source /home/cao/lisantools/usr/setup.csh
+
+	## unimake aio script 
+	#source /home/cao/lisantools/unimake-OS3/setup.csh
+
+	## LISAN tools manual sources & paths
+	prefix="/home/cao/lisantools/usr"
+	export PATH="${prefix}/bin:${PATH}"
+	export LD_LIBRARY_PATH="${prefix}/lib64:${LD_LIBRARY_PATH}"
+	export LD_LIBRARY_PATH="${prefix}/lib:${LD_LIBRARY_PATH}"
+	export MANPATH="${prefix}/share/man:${MANPATH}"
+	export INFOPATH="${prefix}/share/info:${INFOPATH}" 
+	export PKG_CONFIG_PATH="${prefix}/lib/pkgconfig:${PKG_CONFIG_PATH}"
+
+	## pkgconfig test files
+	testfiles=(`test -e /home/cao/lisantools/usr/lib/pkgconfig && find /home/cao/lisantools/usr/lib/pkgconfig/ -name '*.pc' | xargs`)
+	#echo -e "testfiles: ${testfiles[@]}"
+
+	## pkgconfig loop
+	for f in "${testfiles[@]}" ; do
+		ldlibpath=`pkg-config --variable=LD_LIBRARY_PATH "$f"`;
+		if [[ "x${ldlibpath}" != "x" ]] ; then
+			echo "${ldlibpath}"
+			export LD_LIBRARY_PATH="${ldlibpath}:${LD_LIBRARY_PATH}"
+		fi
+	done
+
+	## unimake manual sources & paths
+	prefix="/home/cao/lisantools/unimake-OS3"
+	exec_prefix="${prefix}"
+	datarootdir="${prefix}/share"
+	bindir="${exec_prefix}/bin"
+	mandir="${datarootdir}/man"
+
+	## unimake_dir env variable
+	export UNIMAKE_DIR="${prefix}"
+
+	## Path for genlibwrapper (script and man page)
+	export PATH="${bindir}:${PATH}"
+	export MANPATH=":${mandir}:${MANPATH}"
+
+	## Other Veloce & cao tools paths
+	export PATH="/home/cao/emulateur/scripts:${PATH}"
+	export PATH="/home/progveloce/scripts:${PATH}"
+	#export PATH="/home/progveloce/bin/:${PATH}"
+
+	### Emulation licenses ###
+	export MGLS_LICENSE_FILE="${MGLS_LICENSE_FILE}:1717@daclelm:1717@mentor-lm:1717@emucealm:1717@sinetlm"
+	#export LM_LICENSE_FILE="1717@daclelm:28476@daclelm:27022@daclelm:27004@daclelm:1055@faust:1055@gre-lm:27015@grelm01:27015@grelm02:27015@grelm03:27000@gre-lm"
+	#export LM_LICENSE_FILE="28476@daclelm:27022@daclelm:27004@daclelm:1055@faust:1055@gre-lm:27015@grelm01:27015@grelm02:27015@grelm03:27000@gre-lm"
+	#export SNPSLMD_LICENSE_FILE="26585@gre-lm:26585@daclelm:26585@grelm01:26585@grelm02:26585@grelm03"
+	#export ATRENTA_LICENSE_FILE="26585@daclelm"
+
+	### Remove previous veloce software, gcc & systemc versions ###
+	bash_cleanemu
+
+	### Veloce env variables & sources ###
+
+	## the default veloce Emulator env variable (veloce emulation target), if it does not exist
+	if [[ -z $Emulator ]] ; then
+		export Emulator="stagioni"
+		#export Emulator="fromaggi"
+	fi
+	
+	## the Emulator env variable (override)
+	export Emulator="fromaggi"
+	export Emulator="stagioni"
+
+
+	## veloce software version selection variable
+	version="1709"
+	version="1901"
+	#version="1903"
+
+	## argument handling (override)
+	while [[ $# != 0 ]] ; do
+	
+		## use args to set the Emulator env variable
+		if [[ $# -ge 1 && $1 =~ fromaggi|stagioni ]] ; then
+			export Emulator="$1"
+			#echo -e "\e[32margs emulator: \e[36m$Emulator\e[0m"
+		fi
+
+		## use the args to set the version
+		if [[ $# -ge 1 && $1 =~ 19.0.1|17.0.9|1901|1709 ]] ; then
+			version="`echo $1 | sed -e 's/[vV\.]//g'`"
+			#echo -e "\e[32margs version: \e[36m$version\e[0m"
+		fi
+
+		## clean the envirement and exit
+		if [[ $# -ge 1 && $1 =~ clean ]] ; then
+			## unset the Emulator variable also 
+			unset Emulator
+		
+			## debug printout
+			#paths
+		
+			## exit the script
+			exit
+		fi
+
+		## remove the current argument
+		shift
+		
+	done
+
+	## Normal Printout
+	echo -e "\e[32mSourcing Veloce Software version \e[36m$version\e[32m for the emulator \e[36m$Emulator\e[32m...\e[0m"
+
+	## Source the veloce setup & version scripts
+	if [[ $version == "1709" ]] ; then
+		source /home/cao/emulateur/veloce_setup_v1709.sh
+	elif [[ $version == "1901" ]] ; then
+		source /home/cao/emulateur/veloce_setup_v1901.sh
+	elif [[ $version == "1903" ]] ; then
+		source /home/cao/emulateur/veloce_setup_v1903.sh		
+	else
+		source /home/cao/emulateur/veloce_setup_last.sh
+	fi
+
+
+	### Setup gcc 5.3.0 ###
+	if [[ $version == "1709" ]] ; then
+		gccpath="/home/cao/mgc/questasim_2019.3_1/gcc-4.5.0-linux_x86_64"
+	else 
+		gccpath="/home/cao/mgc/questasim_2019.3_1/gcc-5.3.0-linux_x86_64"
+	fi	
+	
+	export PATH="${gccpath}/bin:${PATH}"
+	export LD_LIBRARY_PATH="${gccpath}/lib:${LD_LIBRARY_PATH}"
+	export LD_LIBRARY_PATH="${gccpath}/lib64:${LD_LIBRARY_PATH}"
+		
+	### Setup SystemC ###
+	export SYSTEMC="/home/cao/emulateur/med_tools/med_tools_v1901/linux/systemc"
+	export LD_LIBRARY_PATH="${SYSTEMC}/include:${LD_LIBRARY_PATH}"
+	export LD_LIBRARY_PATH="${SYSTEMC}:${LD_LIBRARY_PATH}"
+	
+	if [[ $version == "1709" ]] ; then
+		export LD_LIBRARY_PATH="${SYSTEMC}/lib/linux64_el30_gnu45:${LD_LIBRARY_PATH}"
+		export PKG_CONFIG_PATH="${SYSTEMC}/lib/linux64_el30_gnu45/pkgconfig:${PKG_CONFIG_PATH}"
+	else
+		export LD_LIBRARY_PATH="${SYSTEMC}/lib/linux64_el30_gnu53:${LD_LIBRARY_PATH}"
+		export PKG_CONFIG_PATH="${SYSTEMC}/lib/linux64_el30_gnu53/pkgconfig:${PKG_CONFIG_PATH}"
+	fi
+	
+	## Setup Questasim 
+	export QUESTA_PATH="/home/cao/mgc/questasim_2019.2_1_uvm"
+	export MTI="1"
+	export MTI_HOME="${QUESTA_PATH}"
+	export MGC_HOME="${MTI_HOME}"
+	export MTI_BYPASS_SC_PLATFORM_CHECK="1" # to avoid the SL6 support error
+	export PATH="${PATH}:${MTI_HOME}/linux_x86_64"
+	
+	## uniquify paths (inplace)
+	export PATH=`echo $PATH | awk -F ":" '{for (i=1; i<=NF ; i++) {print $i} }' | xargs -n1 | cat -n | sort -uk2 | sort -nk1 | cut -f2- | xargs | sed -e 's/ /:/g'`
+	export LD_LIBRARY_PATH=`echo $LD_LIBRARY_PATH | awk -F ":" '{for (i=1; i<=NF ; i++) {print $i} }' | xargs -n1 | cat -n | sort -uk2 | sort -nk1 | cut -f2- | xargs | sed -e 's/ /:/g'`
+	export MANPATH=`echo $MANPATH | awk -F ":" '{for (i=1; i<=NF ; i++) {print $i} }' | xargs -n1 | cat -n | sort -uk2 | sort -nk1 | cut -f2- | xargs | sed -e 's/ /:/g'`
+
+	## fix to allow for the default manpath
+	export MANPATH=`echo ":$MANPATH" | sed -e 's/^[:]*/:/g'`
+
+	## debug printout
+	#paths
+
+}
+
+
+bash_emu $*
+
+
+
+

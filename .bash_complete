@@ -1,0 +1,295 @@
+#!/bin/bash
+
+##=====================================================================================================================##
+
+## plex complete
+_comp_plex () {
+
+	# if [ "${#COMP_WORDS[@]}" != "2" ]; then
+		# return
+	# fi
+
+	## initialize the return array
+	COMPREPLY=()
+
+	## build the ssh hosts list
+	plex_args='start stop log pull status help env'
+	#echo -e "\e[32mplex_args: ${plex_args[@]}\e[0m"
+	
+	## set the actual return value
+	#plexcomp=$(compgen -W "${plex_args[@]}" ${COMP_WORDS[COMP_CWORD]})
+	#echo -e "\e[32msshcomp: ${plex_args[@]}\e[0m"
+	COMPREPLY=($(compgen -W "$(echo ${plex_args[@]})" ${COMP_WORDS[COMP_CWORD]}))
+
+	## normal return 
+	return 0
+}
+
+## run_plex.sh complete
+complete -F _comp_plex ./run_plex.sh
+
+##=====================================================================================================================##
+
+## run_install.sh bash auto-complete
+function _runcomp {
+
+	# if [ "${#COMP_WORDS[@]}" != "2" ]; then
+		# return
+	# fi
+
+	## initialize the return array
+	COMPREPLY=()
+
+	## build the ssh hosts list
+	runargs=("help deploy certs inst env build start stop status log pull")
+	runargs+=("beta dev recette prod")
+	runargs+=("remuser remhost remalias repodir")
+	#echo -e "\e[32mrunargs: ${runargs[@]}\e[0m"
+	
+	## set the actual return value
+	COMPREPLY=($(compgen -W "$(echo ${runargs[@]})" ${COMP_WORDS[COMP_CWORD]}))
+
+	## normal return 
+	return 0
+}
+
+## setup the ./run_install.sh script to use bash auto-complete 
+complete -F _runcomp ./run_install.sh
+
+##=====================================================================================================================##
+
+## ssh & scp complete
+_comp_ssh () {
+
+	# if [ "${#COMP_WORDS[@]}" != "2" ]; then
+		# return
+	# fi
+
+	## initialize the return array
+	COMPREPLY=()
+
+	## build the ssh hosts list
+	#ssh_hosts=$(cat ~/.ssh/known_hosts | cut -f 1 -d ' ' | sed -e s/,.*//g | grep -v ^# | uniq | grep -v "\[" ; cat ~/.ssh/config | grep -i "^Host " | awk '{print $2}'; )
+	#ssh_config=$(cat ~/.ssh/config | grep -i "^Host " | awk '{print $2}')
+	#ssh_knownhosts=$(cat ~/.ssh/known_hosts | awk '{print $1}' | sed 's/\[*\]*//g' | awk 'BEGIN {FS=","} {print $1}' | awk 'BEGIN {FS="."} {print $1}')
+	test -f ~/.ssh/config && ssh_config=$(cat ~/.ssh/config | grep -i "^Host " | awk '{print $2}') || ssh_config=""
+	test -f ~/.ssh/known_hosts && ssh_knownhosts=$(cat ~/.ssh/known_hosts | awk '{print $1}' | sed 's/\[*\]*//g' | awk 'BEGIN {FS=","} {print $1}' | awk 'BEGIN {FS="."} {print $1}')  || ssh_knownhosts=""
+
+
+	#ssh_config='test1 test2 test3 test23 test23 test23 test1'
+	#ssh_config='test1 test2 test3 test23 test1 test2 test3 test23 test1 test2 test3 test23'
+	
+	#hosts=($ssh_config)
+	hosts=($ssh_config $ssh_knownhosts)
+	hosts=$(echo "$hosts" | xargs -n1 | sort -u | xargs )
+
+	#echo -e "\e[32mhosts: ${hosts[@]}\e[0m"
+	
+	## set the actual return value
+	#sshcomp=$(compgen -W "${hosts[@]}" ${COMP_WORDS[COMP_CWORD]})
+	#echo -e "\e[32msshcomp: ${hosts[@]}\e[0m"
+	COMPREPLY=($(compgen -W "$(echo ${hosts[@]})" ${COMP_WORDS[COMP_CWORD]}))
+
+	## normal return 
+	return 0
+}
+
+## the actual complete commands
+#complete -F _comp_ssh scp
+complete -F _comp_ssh ssh
+complete -F _comp_ssh ssh-copy-id
+complete -F _comp_ssh ssh-display
+complete -F _comp_ssh ssh-keygen
+
+##=====================================================================================================================##
+
+## git complete
+function _comp_gitcommands {
+
+	## initialize the return array
+	COMPREPLY=()
+	
+	## intialize the gitcmds array
+	gitcmds=()
+
+	## search for the git command
+	gitcmd=$(which git)
+	
+	## if found run the codegen code
+	if [[ ! -z $gitcmd ]] ; then
+
+		## todo: fix the git help -a command awk (output has changed)
+
+		## build the git commands command
+		
+		## static version (test)
+		#gitcmds=('status push pull commit clone add')
+		
+		## old version
+		#gitcmds+=($(git help -a | awk '{if ($0 !~ /available subcommands/ && $0 !~ /available git commands/) {print $0}}' | xargs -n1))
+
+		## new version
+		gitcmds+=($(git help -a | awk '{if ($0 !~ /command/ && $0 !~ /Commands/ && $0 !~ /Interacting/) {print $1}}' | xargs -n1))
+
+		## add the local files
+		gitcmds+=($(git status --porcelain | awk '{print $2}' | xargs))
+
+		## inplace sort and uniquify
+		gitcmds=$(echo "${gitcmds[@]}" | xargs -n1 | sort -u | xargs )
+		
+		## old csh command (template)
+		#complete git 'p/1/$gitcmds/'
+		
+		## set the actual return value
+		COMPREPLY=($(compgen -W "$(echo ${gitcmds[@]})" -- ${COMP_WORDS[COMP_CWORD]}))
+	fi
+
+	## normal return 
+	return 0	
+
+}
+
+## the actual complete command
+complete -F  _comp_gitcommands git
+
+##=====================================================================================================================##
+
+## makefile complete
+function _comp_makecommands {
+
+	## initialize the return array
+	COMPREPLY=()
+
+	## search for the make command
+	makecmd=$(which make)
+	
+	#echo -e "\e[32mmakecmd: ${makecmd[@]}\e[0m"
+	
+	## if found run the codegen code
+	if [[ ! -z $makecmd ]] ; then
+
+		## initialize some arrays
+		gitmakefiles=()
+		gitpaths=()
+		unimakefiles=()
+		makefiles=()
+		makeincludes=()
+
+		## build the gitpath makefile list
+		#gitpaths+=($(find . -maxdepth 3 -type d -exec test -e '{}/.git' ';' -print -prune | xargs))
+		#gitpaths+=($(find . -maxdepth 3 -type d -exec test -e '{}/.git' ';' -print | xargs))
+		#gitpaths+=($(find . -maxdepth 3 -type d -iname ".git" | xargs dirname))
+		#gitmakefiles+=($(find ${gitpaths[@]} -maxdepth 3 -type f -iname '*Makefile*' | xargs) )
+
+		## build the currmakefiles makefile list (wrt pwd)
+		currmakefiles+=($(find . -maxdepth 1 -type f -iname '*Makefile*' | xargs))
+		
+		## todo write code to reccursively check includes and check only in the current directory & use -maxdepth 1 as i am going for the exact file
+		makeincludes=($(find . -type f -iname '*Makefile*' | xargs grep --color=auto -ish ^include | awk '{print $2}' | sed -e 's/\r//g' -e 's/(/{/g' -e 's/)/}/g' | xargs -n1 | cat -n | sort -uk2 | sort -nk1 | cut -f2- | xargs))
+
+		#echo -e "\e[32mgitpaths: ${gitpaths[@]}\e[0m"
+		#echo -e "\e[32mgitmakefiles: ${gitmakefiles[@]}\e[0m"
+		
+		## build the unimake makefile list
+		#unimakefiles=("$UNIMAKE_DIR/Makefile.def $UNIMAKE_DIR/Makefile.veloce $UNIMAKE_DIR/Makefile.questa")
+		#unimakefiles=$(find $gitpath -iname "makefile.def") | xargs grep -oP '^include \K.*$' | awk 'BEGIN {FS=":"} {print $2}')
+
+		## build the general makefile list
+		makefiles+=(${currmakefiles[@]})
+		makefiles+=(${makeincludes[@]})
+		#makefiles+=(${gitmakefiles[@]})
+		#makefiles+=(${unimakefiles[@]})
+
+		## check if the files exist and run readlink on each item
+		for i in ${!makefiles[@]} ; do 
+			## apply readlink if the element is non-empty else remove the element
+			if [[ -n makefiles[$i] ]] ; then 
+				makefiles[$i]=$(readlink -f ${makefiles[$i]})
+			else
+				## unset the current element
+				unset makefiles[$i]
+				
+				## rebase the array
+				makefiles=("${makefiles[@]}")
+			fi	
+		done
+
+		maketargets=($(/bin/grep -hoE '^[a-zA-Z0-9_-]+:([^=]|$)' ${makefiles[@]} | sed 's/[^a-zA-Z0-9_-]*$//' | sed 's/ //' | xargs -n1 | sort -u | xargs))
+	
+		#echo -e "\e[32mmaketargets: ${maketargets[@]}\e[0m"
+		
+		## set the actual return value
+		# COMPREPLY=($(compgen -W "$(echo ${maketargets[@]})" ${COMP_WORDS[COMP_CWORD]}))
+		COMPREPLY=($(compgen -W "$(echo ${maketargets[@]})" ${COMP_WORDS[COMP_CWORD]}))
+	fi
+
+	## normal return 
+	return 0	
+
+}
+
+## the actual complete command
+complete -F  _comp_makecommands make
+
+##=====================================================================================================================##
+
+## run compgen -c once and store the results
+#cmdlist=""
+#cmdlist=$(compgen -c | xargs)
+
+## cd
+#complete -W "$(compgen -a | xargs)" -- ${COMP_WORDS[COMP_CWORD]} cd
+
+# aliases
+#complete -W "$(alias | sed 's/alias //g' | sed 's/=.*//g' | xargs)" -- ${COMP_WORDS[COMP_CWORD]} alias
+complete -W "$(compgen -a | xargs)" -- ${COMP_WORDS[COMP_CWORD]} alias
+complete -W "$(compgen -a | xargs | xargs)" -- ${COMP_WORDS[COMP_CWORD]} unalias
+
+## man, which & where
+complete -W "$(compgen -a | xargs)" -- ${COMP_WORDS[COMP_CWORD]} man
+complete -W "$(compgen -a | xargs)" -- ${COMP_WORDS[COMP_CWORD]} which
+complete -W "$(compgen -a | xargs)" -- ${COMP_WORDS[COMP_CWORD]} where
+
+# environment & local variables 
+complete -W "$(compgen -e | xargs)" -- ${COMP_WORDS[COMP_CWORD]} export
+complete -W "$(compgen -ev | xargs)" -- ${COMP_WORDS[COMP_CWORD]} unset
+
+## chgrp & chown
+#complete -W "$(compgen -ug | xargs)" -- ${COMP_WORDS[COMP_CWORD]} chown
+#complete -W "$(compgen -g | xargs)" -- ${COMP_WORDS[COMP_CWORD]} chgrp
+
+## su
+#complete -W "$(compgen -u | xargs)" -- ${COMP_WORDS[COMP_CWORD]} su
+
+##=====================================================================================================================##
+
+# ## local files
+# _comp_files () {
+
+	# # if [ "${#COMP_WORDS[@]}" != "2" ]; then
+		# # return
+	# # fi
+
+	# ## initialize the return array
+	# COMPREPLY=()
+
+	# ## build the local files list
+	# files=($(ls . | xargs -n1 | sort -u | xargs) )
+	# #echo -e "\e[32mfiles: ${files[@]}\e[0m"
+	
+	# ## set the actual return value
+	# #sshcomp=$(compgen -W "${files[@]}" ${COMP_WORDS[COMP_CWORD]})
+	# #echo -e "\e[32mfilecomp: ${files[@]}\e[0m"
+	# COMPREPLY=($(compgen -W "$(echo ${files[@]})" ${COMP_WORDS[COMP_CWORD]}))
+
+	# ## normal return 
+	# return 0
+# }
+
+##=====================================================================================================================##
+
+## load bash-completion general functions
+#source /etc/bash_completion
+#complete -o filenames -o bashdefault
+
+##=====================================================================================================================##

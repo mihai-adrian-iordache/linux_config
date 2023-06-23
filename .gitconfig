@@ -1,0 +1,64 @@
+# This is Git's per-user configuration file.
+
+[user]
+	name = Mihai Iordache
+	#email = adrian.mihai.iordache@gmail.com
+	email = mihai.iordache@cea.fr
+[alias]
+	root = !git rev-parse --show-toplevel
+	#root = !git rev-parse --show-toplevel | sed -e 's/[ \\t]\\+/\\\\ /g'
+	gethashes=!git fetch && git show-ref --head --dereference --abbrev
+	find = log --pretty=\"format:%Cgreen%h %Cblue%s\" --name-status --grep
+	addmodule= !git submodule add
+	cloneall = !git clone --recurse-submodules
+	fetchall = !git fetch --all --tags && git submodule update --init --recursive --remote --rebase
+	tagsall = !git fetch -p -j10 --all --tags && git status && git remote | xargs -L1 git push --tags
+	pushall = !git fetch -p -j10 --all --tags && git status && git remote | xargs -L1 git push --all
+	pushall0 = !git fetch -p -j10 --all --tags && git status && git remote | xargs -L1 git push --force-with-lease --all
+	pullall = !git set-upstream && git fetch -p -j10 --all --tags && git pull --ff-only -p -j10 --recurse-submodules && git submodule update --init --recursive --remote --rebase && git status
+	pullall0 = !git fetch --all --tags && git pull -p -j10 --recurse-submodules=yes && git submodule update --init --recursive --remote --rebase && git status
+	pullrebase = !git stash && git fetch -p -j10 --all --tags && git pull --ff-only -p -j10 --recurse-submodules=yes --rebase && git submodule update --init --recursive --remote --rebase && git stash pop --index
+	#pullupstream = !git pull -p -j10 $(git rev-parse --abbrev-ref --symbolic-full-name @{u} | awk -F "/" '{print $1}')  $(git rev-parse --abbrev-ref --symbolic-full-name @{u} | awk -F "/" '{print $2}')
+	commitall = !git pullall && git commit
+	last = !git --no-pager log -1 --stat
+	fixall = !"git fixcommit ; git fixyaml ; git fixeol"
+	fixtabs = !"cd ${GIT_PREFIX:-.} ; sed -i -e 's/\\t/    /g'"
+	fixspaces = !"cd ${GIT_PREFIX:-.} ; sed -i -e 's/[ \\t]\\+$//g'"
+	fixcommit = !git status --porcelain | awk '/^[ \\t]*M/ {print $2}' | xargs -n1 | xargs -I % sed -i -e 's/[ \\t]\\+$//' \"$(git root)/%\"
+	fixyaml = !git status --porcelain | awk '/y[a]*ml/ && /^[ \\t]*M/ {print $2}' | xargs -n1 | xargs -I % sed -i -e 's/\\t/    /g' \"`git root`/%\"
+	fixeol = !git status --porcelain | awk '/^[ \\t]*M/ {print $2}' | xargs -n1 | xargs -I % sed -i -e 's/\\r//' \"`git root`/%\"
+	fixspaces = !sed -i 's/[ \\t]\\+$//g'
+	getcurrbranch = !git rev-parse --abbrev-ref HEAD
+	getupstream = !git rev-parse --abbrev-ref --symbolic-full-name @{u}
+	getorigin = !git rev-parse --abbrev-ref --symbolic-full-name @{u} | awk -F "/" '{print $1}'
+	getupbranch = !git rev-parse --abbrev-ref --symbolic-full-name @{u} | awk -F "/" '{print $2}'
+	pullupstream = !oldbranch=$(git getcurrbranch) && echo $oldbranch && git switch $(git getupbranch) && git pull $(git getorigin) $(git getupbranch) && git switch $oldbranch
+	set-upstream = !git branch --set-upstream-to=origin/$(git symbolic-ref --short HEAD)
+	subupdate = !git submodule update --init --recursive --remote --rebase && git status
+	subupdaterem = !git submodule update --init --recursive --remote --rebase --remote && git status
+	subpullall = !"git pullal; git submodule foreach git pullall"
+	subfetchall = !"git fetchall ; git submodule foreach git fetchall"
+	substatus = !"git subfetchall ; echo "" ; git submodule foreach git status ; echo "" ; git status --ignored"
+	subdiff = !"git submodule foreach git diff ."
+[core]
+	#excludesfile = /home/mihai/.gitignore_global
+	pager = cat
+[status]
+	submoduleSummary = true
+	showStash = true
+[diff]
+	submodule = log
+	colorMoved = zebra
+[push]
+	autoSetupRemote = true
+[pull]
+	rebase = true
+[fetch]
+	prune = true
+	parallel = 0
+[submodule]
+	fetchJobs = 0
+[http]
+	#sslVerify = true
+[credential]
+	#helper = cache --timeout=2678400

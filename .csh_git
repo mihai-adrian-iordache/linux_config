@@ -1,0 +1,21 @@
+#!/bin/csh
+
+## setup the git 2.17.2 environement
+setenv PATH "/home/prog/git/git-2.17.2/sl6/bin:${PATH}"
+setenv GIT_SSL_CAPATH "/home/prog/git/git-2.17.2/etc/anchors"
+setenv GIT_SSL_CAINFO "/home/prog/git/git-2.17.2/etc/ca-bundle.crt"
+
+## check to see if git is installed
+#set gitcmd=`which git`
+
+## htps authentification
+#if ( $?gitcmd ) then
+	#git config --global http.sslVerify true
+	#git config --global --unset credential.helper
+	#git config --global credential.helper store
+	#git config --global credential.helper libsecret
+	#git config --global credential.helper "cache --timeout=3600"
+	#git config --global credential.helper "cache --timeout=2678400"
+	#unsetenv SSH_ASKPASS
+#endif
+

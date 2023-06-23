@@ -1,0 +1,20 @@
+## Mail setup files
+
+set smtp-auth=login
+set ssl-verify=ignore
+#set smtp-use-starttls
+
+set smtp=smtp://smtp.gmail.com
+set smtp=smtps://smtp-relay.gmail.com
+set from="Mihai Iordache <garr3tt@gmail.com"
+set smtp-auth-user="garr3tt@gmail.com"
+#set smtp-auth-password="password"
+#set nss-config-dir=/root/etc/certs
+
+#set smtp=smtp://mx.intra.cea.fr
+#set smtp-auth-user="mihai.iordache@cea.fr"
+#set from="Mihai Iordache <mihai.iordache@cea.fr>"
+
+
+
+

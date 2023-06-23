@@ -1,0 +1,90 @@
+#!/bin/csh
+
+### Aliases ###
+
+## FIX: cd was setup to alawys change the prompt
+unalias *
+
+## Set the aliases
+alias ls 'ls --group-directories-first --color=auto'
+alias cls 'clear -x; ls --group-directories-first --color=auto'
+alias ll 'ls -lh'
+alias lla 'ls -Alh'
+alias lsa 'ls -Ah'
+
+alias cd.. 'cd ..'
+alias cd. 'cd ..'
+
+alias mkdir 'mkdir -p'
+alias cp 'cp -rd'
+alias rm 'rm -rf'
+alias ln 'ln -s'
+
+alias du 'du -sh'
+alias df 'df -h'
+alias h 'history'
+
+alias ssh "ssh -X"
+alias scp "scp -r"
+alias su  "su -"
+
+#alias diff "git diff --no-index -w"
+alias diff "diff -swuB --color=auto"
+
+alias tree "tree -a --dirsfirst"
+
+alias watch "watch -c"
+#alias quota "quota -sv"
+
+alias g "gedit"
+alias s 'source'
+alias e 'evince'
+alias vim 'gvim'
+
+## grep options
+set grepopts="--color=auto -is"
+# set grepopts=""
+
+## grep alias
+setenv grepopts "$grepopts"
+alias grep "grep $grepopts"
+
+## hack to enable aliases for sudo
+alias sudo "sudo "
+
+### autocomplete ####
+
+## Setup some autocomplete options
+set autolist = ambiguous # list completion options if ambigous
+set complete = enhance # case insensistive autocomplete
+set autoexpand
+set color
+set nobeep
+#set filec
+#set implicitcd
+#unset ignoreeof
+
+## other options
+#stty erase ^?
+
+## line editing
+setenv EDITOR="vim"
+#setenv EDITOR="gedit"
+setenv VISUAL=${EDITOR}
+
+## setup mailx mailto
+#setenv MALITO "adrian.mihai.iordache@gmail.com"
+#setenv MALITO "miordache@adentis.fr"
+setenv MALITO "mihai.iordache@cea.fr"
+
+### paths ###
+
+## add notepad++ path to the path variable
+#setenv PATH "${PATH}:/mnt/c/Program\ Files/Notepad++/"
+
+### ls colors ###
+
+## LS_COLORS file fix 
+#setenv LS_COLORS "fi=01;30:$LS_COLORS"
+
+

@@ -1,0 +1,85 @@
+#!/bin/csh
+
+## autocomplete for ssh & scp
+set ssh_config=`cat ~/.ssh/config | grep -i "^Host " | awk '{print $2}'`
+set ssh_knownhosts=`cat ~/.ssh/known_hosts | awk '{print $1}' | awk 'BEGIN {FS=",.";} {print $1}' | awk 'BEGIN {FS=".";} {print $1}'`
+
+#set ssh_config='test1 test2 test3 test23 test23 test23 test1'
+#set ssh_config='test1 test2 test3 test23 test1 test2 test3 test23 test1 test2 test3 test23'
+
+#set hosts=($ssh_config)
+set hosts=($ssh_config $ssh_knownhosts)
+set hosts=`echo "$hosts" | xargs -n1 | sort -u | xargs `
+
+complete ssh 'p/1/$hosts/' 'p/2/c/'
+complete ssh-copy-id 'p/1/$hosts/' 'p/2/c/'
+complete ssh-display 'p/1/$hosts/' 'p/2/c/'
+complete ssh-keygen 'p/1/c/' 'p/2/$hosts/'
+
+## man, which & where
+complete man 'p/1/c/'
+complete which 'p/1/c/'
+complete where 'p/1/c/'
+
+# aliases
+complete alias 'p/1/a/'
+complete unalias 'p/1/a/'
+
+# aliases 2
+#complete alias 'p/1/c/'
+#complete unalias 'p/1/c/'
+
+# variables
+complete unset 'p/1/s/'
+complete set 'p/1/s/'
+
+# environment variables
+complete unsetenv 'p/1/e/'
+complete setenv 'p/1/e/'
+
+## chgrp & chown
+complete chgrp 'p/1/g/'
+complete chown 'p/1/u/'
+
+## cd
+complete cd 'p/1/d/'
+
+## su
+complete su 'p/1/u/'
+
+## git
+set gitcmd=`which git`
+if ( $?gitcmd ) then
+	#set gitcmds=('status push pull commit clone add')
+	set gitcmds=(`git help -a | awk '{if ($0 !~ /available subcommands/ && $0 !~ /available git commands/) {print $0}}' | xargs -n1`)
+	set gitcmds=`echo "$gitcmds" | xargs -n1 | sort -u | xargs `
+	complete git 'p/1/$gitcmds/'
+endif
+
+## makefile (old code)
+#set maketargets=(`test -e Makefile && grep -oE '^[a-zA-Z0-9_-]+:([^=]|$)' Makefile | sed 's/[^a-zA-Z0-9_-]*$//' | sed 's/ //'`)
+#set maketargets=`echo "$maketargets" | xargs -n1 | sort -u | xargs `
+#complete make 'p/1/$maketargets/'
+
+## makefile
+
+## build the gitpath makefile list
+#set gitmakefiles=""
+#set gitpath="/home/cao/emulateur/work/emulator_utils/designs"
+#set gitmakefiles="$gitpath/demo/Makefile $gitpath/demo/Makefile.def $gitpath/transactor/transactors_cea/rtl/Makefile $gitpath/transactor/transactors_cea/testbench/rtl/Makefile $gitpath/transactor/emul_common/rtl/Makefile $gitpath/transactor/Makefile.def $gitpath/other/multicomodel_basic_example/Makefile $gitpath/other/demo_example/Makefile"
+#set gitmakefiles=`find $gitpath -iname "makefile*"`
+
+## build the unimake makefile list
+#set unimakefiles=""
+#set unimakefiles="$UNIMAKE_DIR/Makefile.def $UNIMAKE_DIR/Makefile.veloce $UNIMAKE_DIR/Makefile.questa"
+#set unimakefiles=`find $gitpath -iname "makefile.def"` | xargs grep -oP '^include \K.*$' | awk 'BEGIN {FS=":"} {print $2}'`
+
+## build the general makefile list
+#set makefiles="$gitmakefiles $unimakefiles"
+
+#set maketargets=(`/bin/grep -hoEq '^[a-zA-Z0-9_-]+:([^=]|$)' $makefiles | sed 's/[^a-zA-Z0-9_-]*$//' | sed 's/ //' | xargs`)
+#set maketargets=`echo "$maketargets" | xargs -n1 | sort -u | xargs`
+
+## add the actual complete
+#complete make 'p/1/$maketargets/'
+
